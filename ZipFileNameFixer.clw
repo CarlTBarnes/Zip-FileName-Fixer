@@ -1,6 +1,10 @@
 !Problem: Pasted URLs can have Characters > 80h that Zip rejects. 
 !This happens dragging and dropping URL from IE
 !These are usually .URL or .WEBSITE files
+!------------------------------------------------------------------------------
+! 25-Mar-2021  Added Shell Auto Complete of File Name SHAutoComplete() 
+!              from https://github.com/CarlTBarnes/AutoCompleteFileOrURL
+!------------------------------------------------------------------------------
   PROGRAM
   INCLUDE('KEYCODES.CLW')
   MAP
@@ -8,8 +12,14 @@ ZipFileNameFixer    PROCEDURE()
 DB                  PROCEDURE(STRING xMessage)
    MODULE('API')
      OutputDebugString(*CSTRING),RAW,PASCAL,NAME('OutputDebugStringA'),DLL(1)
+     SHAutoComplete(SIGNED hwndEdit, LONG dwFlags ),PASCAL,DLL(1),LONG,PROC  !Returns HResult < 0 if failed
+     !MSDN: "WARNING: Caller needs to have called CoInitialize() or OleInitialize()".
+     !Must call CoInit if calling SHAutoComplete() before Event:OpenWindow (probably RTL calls by then). Must be called once per thread
+     SHAuto_CoInitialize(long=0),PASCAL,DLL(1),LONG,PROC,NAME('CoInitialize')     
    END  
   END
+
+SHACF_FILESYS_DIRS  EQUATE(00000020h)  !Only directories, UNC servers, and UNC server shares. No files.
 MsgCaption  STRING('Zip File Name Fixer - Scan for 80h-FFh')
 CfgFileIni  STRING('.\ZipFNFix.INI')
 CfgSection  EQUATE('Config')
@@ -60,10 +70,9 @@ ErrorExample STRING('This utility fixes the below Compress Error by renaming fil
      'includes characters that cannot be used in a compressed folder, such ' &|
      'as ?. You should rename this file or directory.')
      
-Dirs2Window WINDOW('Scan for Zip Problems 80h-FFh'),AT(,,340,153),CENTER,GRAY,SYSTEM,ICON(ICON:Pick),FONT('Segoe UI',9), |
-            RESIZE
+Dirs2Window WINDOW('Scan for Zip Problems 80h-FFh'),AT(,,340,153),CENTER,GRAY,SYSTEM,ICON(ICON:Pick),FONT('Segoe UI',9)
         PROMPT('&Folder:'),AT(2,4),USE(?Prompt:Folder)
-        ENTRY(@s255),AT(26,4,,11),FULL,USE(FolderInput),FONT('Consolas')
+        ENTRY(@s255),AT(26,4,289,11),USE(FolderInput),FONT('Consolas')
         CHECK('Subfolders'),AT(217,23),USE(ScanSubs),SKIP,TIP('Scan subfolders')
         CHECK('&All Files (uncheck *.URL and *.WebSite)'),AT(79,23),USE(ScanAllExt),SKIP,TIP('Normally scan only .URL an' & |
                 'd .WEBSITE extensions')
@@ -114,6 +123,9 @@ Debug1  PROCEDURE()
     OPEN(Dirs2Window)
     ACCEPT
       CASE EVENT()
+      OF EVENT:OpenWindow   
+            SHAuto_CoInitialize()   !RTL has called but to be safe call
+            SHAutoComplete(?FolderInput{PROP:Handle},SHACF_FILESYS_DIRS)
       OF EVENT:CloseWindow ; RETURN
       END
       CASE ACCEPTED()

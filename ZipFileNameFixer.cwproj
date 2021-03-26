@@ -32,6 +32,9 @@
   </ItemGroup>
   <ItemGroup>
     <FileDriver Include="BASIC" />
+    <Library Include="ShLwAutoComp.lib">
+      <CopyDllToOutputDirectory>Never</CopyDllToOutputDirectory>
+    </Library>
   </ItemGroup>
   <Import Project="$(ClarionBinPath)\SoftVelocity.Build.Clarion.targets" />
 </Project>
