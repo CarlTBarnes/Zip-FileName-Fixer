@@ -72,7 +72,8 @@ ErrorExample STRING('This utility fixes the below Compress Error by renaming fil
      
 Dirs2Window WINDOW('Scan for Zip Problems 80h-FFh'),AT(,,340,153),CENTER,GRAY,SYSTEM,ICON(ICON:Pick),FONT('Segoe UI',9)
         PROMPT('&Folder:'),AT(2,4),USE(?Prompt:Folder)
-        ENTRY(@s255),AT(26,4,289,11),USE(FolderInput),FONT('Consolas')
+        ENTRY(@s255),AT(26,4,289,11),USE(FolderInput),FONT('Consolas') 
+        BUTTON('...'),AT(319,3,12,12),USE(?PickDirBtn),SKIP
         CHECK('Subfolders'),AT(217,23),USE(ScanSubs),SKIP,TIP('Scan subfolders')
         CHECK('&All Files (uncheck *.URL and *.WebSite)'),AT(79,23),USE(ScanAllExt),SKIP,TIP('Normally scan only .URL an' & |
                 'd .WEBSITE extensions')
@@ -130,6 +131,7 @@ Debug1  PROCEDURE()
       END
       CASE ACCEPTED()
       OF ?CloseBtn ; RETURN
+      OF ?PickDirBtn ; FILEDIALOG('Folder to Scan',FolderInput,,FILE:Directory+FILE:LongName+FILE:KeepDir) ; DISPLAY
       OF ?ScanBtn
             FolderInput=LEFT(FolderInput)
             QNdx=LEN(CLIP(FolderInput)) ; IF FolderInput[QNdx]='\' THEN FolderInput[QNdx]=''.
